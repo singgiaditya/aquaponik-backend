@@ -1,0 +1,17 @@
+{
+  "name": "aquaponik-backend",
+  "version": "1.0.0",
+  "description": "backend for aquaponik IOT",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "express": "^5.1.0",
+    "mqtt": "^5.11.0"
+  }
+}

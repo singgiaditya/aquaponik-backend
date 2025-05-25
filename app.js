@@ -1,21 +1,26 @@
 const express = require("express");
 const mqtt = require("mqtt");
 const { createClient } = require("@supabase/supabase-js");
+require("dotenv").config();
+const http = require("http");
+const { Server } = require("socket.io");
+const cors = require("cors");
+
 
 const app = express();
-const port = 3000;
+app.use(cors());
+const port = 3001;
 
 // Setup Supabase client
-const supabase_url = "https://vglkxfjihhnkwxqohpbw.supabase.co";
-const supabase_anon_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnbGt4ZmppaGhua3d4cW9ocGJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwNDU5MDksImV4cCI6MjA2MDYyMTkwOX0.ksigYHQDfOvcvTSIoOtFu6TBzZomUwchiJWHiSEcXUM"
+const supabase_url = process.env.supabase_url;
+const supabase_anon_key = process.env.supabase_anon_key;
 
 const supabase = createClient(supabase_url, supabase_anon_key);
 
 // Setup MQTT client
-const mqttClient = mqtt.connect("mqtt://localhost:1883", {
-  username: "singgi",
-  password: "singgi",
-});
+const mqttClient = mqtt.connect(
+  "mqtt://belajario:jsEg5E9jej5ScWAY@belajario.cloud.shiftr.io"
+);
 
 mqttClient.on("connect", () => {
   console.log("Connected to MQTT broker");
@@ -28,9 +33,15 @@ mqttClient.on("connect", () => {
   });
 });
 
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
 mqttClient.on("message", async (topic, message) => {
   console.log("Pesan masuk:", message.toString());
-
   try {
     const data = JSON.parse(message.toString());
 
@@ -38,8 +49,23 @@ mqttClient.on("message", async (topic, message) => {
       {
         temperature: data.temperature,
         humidity: data.humidity,
+        water_distance: data.water_distance,
+        water_temperature: data.water_temperature,
+        light_intensity: data.light_intensity,
+        tds: data.tds,
+        ph: data.ph
       },
     ]);
+
+    io.emit("iot_data", data);
+
+    if (data.water_distance < 5) {
+      mqttClient.publish("esp/action", "decrease_water");
+      console.error("Mengirimkan perintah untuk meningkatkan air");
+    } else if (data.water_distance > 15) {
+      mqttClient.publish("esp/action", "increase_water");
+      console.error("Mengirimkan perintah untuk mengurangi air");
+    }
 
     if (error) {
       console.error("Gagal simpan ke Supabase:", error.message);
@@ -56,6 +82,21 @@ app.get("/", (req, res) => {
   res.send("MQTT listener running and Express server is up!");
 });
 
-app.listen(port, () => {
+app.get("/data", async (req, res) => {
+  const { data, error } = await supabase
+    .from("iot_data")
+    .select("*")
+    .order("id", { ascending: false,  })
+    .limit(10);
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+  mqttClient.publish("esp/log", JSON.stringify(data));
+  res.json(data.reverse());
+});
+
+
+server.listen(port, () => {
   console.log(`Express server listening at http://localhost:${port}`);
 });

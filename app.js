@@ -6,7 +6,6 @@ const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 
-
 const app = express();
 app.use(cors());
 const port = process.env.PORT || 3001;
@@ -14,13 +13,12 @@ const port = process.env.PORT || 3001;
 // Setup Supabase client
 const supabase_url = process.env.supabase_url;
 const supabase_anon_key = process.env.supabase_anon_key;
+const mqtt_url = process.env.mqtt_url;
 
 const supabase = createClient(supabase_url, supabase_anon_key);
 
 // Setup MQTT client
-const mqttClient = mqtt.connect(
-  "mqtt://belajario:jsEg5E9jej5ScWAY@belajario.cloud.shiftr.io"
-);
+const mqttClient = mqtt.connect(mqtt_url);
 
 mqttClient.on("connect", () => {
   console.log("Connected to MQTT broker");
@@ -53,7 +51,7 @@ mqttClient.on("message", async (topic, message) => {
         water_temperature: data.water_temperature,
         light_intensity: data.light_intensity,
         tds: data.tds,
-        ph: data.ph
+        ph: data.ph,
       },
     ]);
 
@@ -86,7 +84,7 @@ app.get("/data", async (req, res) => {
   const { data, error } = await supabase
     .from("iot_data")
     .select("*")
-    .order("id", { ascending: false,  })
+    .order("id", { ascending: false })
     .limit(10);
 
   if (error) {
@@ -123,7 +121,6 @@ app.get("/data/all", async (req, res) => {
     sort,
   });
 });
-
 
 server.listen(port, () => {
   console.log(`Express server listening at http://localhost:${port}`);

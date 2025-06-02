@@ -122,6 +122,34 @@ app.get("/data/all", async (req, res) => {
   });
 });
 
+app.get("/actions", async (req, res) => {
+  // Ambil query parameter, default page=1, limit=20, sort=desc
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const sort = req.query.sort === "asc" ? "asc" : "desc";
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, error, count } = await supabase
+    .from("iot_action")
+    .select("*", { count: "exact" })
+    .range(from, to)
+    .order("id", { ascending: sort === "asc" });
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({
+    data,
+    page,
+    limit,
+    total: count,
+    totalPages: Math.ceil(count / limit),
+    sort,
+  });
+});
+
 server.listen(port, () => {
   console.log(`Express server listening at http://localhost:${port}`);
 });

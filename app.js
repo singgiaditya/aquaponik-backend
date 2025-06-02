@@ -8,6 +8,7 @@ const cors = require("cors");
 
 const app = express();
 app.use(cors());
+app.use(express.json()); // Tambahkan ini di atas sebelum semua endpoint
 const port = process.env.PORT || 3001;
 
 // Setup Supabase client
@@ -148,6 +149,28 @@ app.get("/actions", async (req, res) => {
     totalPages: Math.ceil(count / limit),
     sort,
   });
+});
+
+app.post("/actions", async (req, res) => {
+  const { type, action, value } = req.body;
+
+  if (!type || !action || value === undefined) {
+    return res.status(400).json({ error: "type, action, dan value wajib diisi" });
+  }
+
+  const { data, error } = await supabase
+    .from("iot_action")
+    .insert([
+      { type, action, value }
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.status(201).json({ message: "Action berhasil ditambahkan", data });
 });
 
 server.listen(port, () => {

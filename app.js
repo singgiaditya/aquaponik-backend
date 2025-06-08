@@ -14,12 +14,21 @@ const port = process.env.PORT || 3001;
 // Setup Supabase client
 const supabase_url = process.env.supabase_url;
 const supabase_anon_key = process.env.supabase_anon_key;
+//mqtt
 const mqtt_url = process.env.mqtt_url;
+const mqtt_port = process.env.mqtt_port;
+const mqtt_username = process.env.mqtt_username;
+const mqtt_password = process.env.mqtt_password;
+
 
 const supabase = createClient(supabase_url, supabase_anon_key);
 
 // Setup MQTT client
-const mqttClient = mqtt.connect(mqtt_url);
+const mqttClient = mqtt.connect(mqtt_url, {
+  port: mqtt_port,
+  username: mqtt_username,
+  password: mqtt_password
+});
 
 mqttClient.on("connect", () => {
   console.log("Connected to MQTT broker");

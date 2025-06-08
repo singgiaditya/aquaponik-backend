@@ -25,7 +25,7 @@ Backend sederhana untuk menerima data dari perangkat IoT (ESP32) melalui protoko
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/username/aquaponik-backend.git
+git clone https://github.com/singgiaditya/aquaponik-backend.git
 cd aquaponik-backend 
 ```
 

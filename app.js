@@ -85,102 +85,17 @@ mqttClient.on("message", async (topic, message) => {
   }
 });
 
+// Import routes
+const dataRoutes = require("./routes/dataRoutes")(supabase, mqttClient);
+const actionRoutes = require("./routes/actionRoutes")(supabase);
+
 // Endpoint testing
 app.get("/", (req, res) => {
   res.send("MQTT listener running and Express server is up!");
 });
 
-app.get("/data", async (req, res) => {
-  const { data, error } = await supabase
-    .from("iot_data")
-    .select("*")
-    .order("id", { ascending: false })
-    .limit(10);
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-  mqttClient.publish("esp/log", JSON.stringify(data));
-  res.json(data.reverse());
-});
-
-app.get("/data/all", async (req, res) => {
-  // Ambil query parameter, default page=1, limit=20, sort=desc
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 20;
-  const sort = req.query.sort === "asc" ? "asc" : "desc";
-  const from = (page - 1) * limit;
-  const to = from + limit - 1;
-
-  const { data, error, count } = await supabase
-    .from("iot_data")
-    .select("*", { count: "exact" })
-    .range(from, to)
-    .order("id", { ascending: sort === "asc" });
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
-  res.json({
-    data,
-    page,
-    limit,
-    total: count,
-    totalPages: Math.ceil(count / limit),
-    sort,
-  });
-});
-
-app.get("/actions", async (req, res) => {
-  // Ambil query parameter, default page=1, limit=20, sort=desc
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 20;
-  const sort = req.query.sort === "asc" ? "asc" : "desc";
-  const from = (page - 1) * limit;
-  const to = from + limit - 1;
-
-  const { data, error, count } = await supabase
-    .from("iot_action")
-    .select("*", { count: "exact" })
-    .range(from, to)
-    .order("id", { ascending: sort === "asc" });
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
-  res.json({
-    data,
-    page,
-    limit,
-    total: count,
-    totalPages: Math.ceil(count / limit),
-    sort,
-  });
-});
-
-app.post("/actions", async (req, res) => {
-  const { type, action, value } = req.body;
-
-  if (!type || !action || value === undefined) {
-    return res.status(400).json({ error: "type, action, dan value wajib diisi" });
-  }
-
-  const { data, error } = await supabase
-    .from("iot_action")
-    .insert([
-      { type, action, value }
-    ])
-    .select()
-    .single();
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
-  res.status(201).json({ message: "Action berhasil ditambahkan", data });
-});
+app.use("/", dataRoutes);
+app.use("/", actionRoutes);
 
 server.listen(port, () => {
   console.log(`Express server listening at http://localhost:${port}`);

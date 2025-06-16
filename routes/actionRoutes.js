@@ -44,11 +44,11 @@ module.exports = (supabase) => {
       req.mqttClient.publish(
         "esp2/receive/action",
         // JSON.stringify({ type, action, value })
-        type
+        action
       );
     }
 
-    console.log("mqtt kirim action:", type);
+    console.log("mqtt kirim action:", action);
     res.status(201).json({ message: "Action berhasil ditambahkan", data });
   });
 

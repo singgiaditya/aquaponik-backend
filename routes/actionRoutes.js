@@ -39,6 +39,16 @@ module.exports = (supabase) => {
       .select()
       .single();
     if (error) return res.status(500).json({ error: error.message });
+    // Kirim ke MQTT
+    if (req.mqttClient) {
+      req.mqttClient.publish(
+        "esp2/receive/action",
+        // JSON.stringify({ type, action, value })
+        type
+      );
+    }
+
+    console.log("mqtt kirim action:", type);
     res.status(201).json({ message: "Action berhasil ditambahkan", data });
   });
 

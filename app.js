@@ -67,14 +67,6 @@ mqttClient.on("message", async (topic, message) => {
 
     io.emit("iot_data", data);
 
-    if (data.water_distance < 5) {
-      mqttClient.publish("esp/action", "decrease_water");
-      console.error("Mengirimkan perintah untuk meningkatkan air");
-    } else if (data.water_distance > 15) {
-      mqttClient.publish("esp/action", "increase_water");
-      console.error("Mengirimkan perintah untuk mengurangi air");
-    }
-
     if (error) {
       console.error("Gagal simpan ke Supabase:", error.message);
     } else {

@@ -87,7 +87,10 @@ app.get("/", (req, res) => {
 });
 
 app.use("/", dataRoutes);
-app.use("/", actionRoutes);
+app.use("/", (req, res, next) => {
+  req.mqttClient = mqttClient;
+  next();
+}, actionRoutes);
 
 server.listen(port, () => {
   console.log(`Express server listening at http://localhost:${port}`);

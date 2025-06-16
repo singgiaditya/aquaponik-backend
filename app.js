@@ -20,14 +20,13 @@ const mqtt_port = process.env.mqtt_port;
 const mqtt_username = process.env.mqtt_username;
 const mqtt_password = process.env.mqtt_password;
 
-
 const supabase = createClient(supabase_url, supabase_anon_key);
 
 // Setup MQTT client
 const mqttClient = mqtt.connect(mqtt_url, {
   port: mqtt_port,
   username: mqtt_username,
-  password: mqtt_password
+  password: mqtt_password,
 });
 
 mqttClient.on("connect", () => {
@@ -87,10 +86,14 @@ app.get("/", (req, res) => {
 });
 
 app.use("/", dataRoutes);
-app.use("/", (req, res, next) => {
-  req.mqttClient = mqttClient;
-  next();
-}, actionRoutes);
+app.use(
+  "/",
+  (req, res, next) => {
+    req.mqttClient = mqttClient;
+    next();
+  },
+  actionRoutes
+);
 
 server.listen(port, () => {
   console.log(`Express server listening at http://localhost:${port}`);
